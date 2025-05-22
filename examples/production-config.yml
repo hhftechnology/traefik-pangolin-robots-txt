@@ -1,0 +1,353 @@
+# Production Configuration Examples for Pangolin Robots.txt Traefik Plugin
+# This file demonstrates various production-ready configurations
+# showcasing the enhanced features and capabilities of version 1.0.0
+
+# Example 1: High-Performance Setup with Local File
+# Ideal for containerized applications where you want maximum reliability
+# and performance with zero external dependencies
+production-high-performance:
+  plugin:
+    pangolin-robots-txt:
+      # Use local file for maximum reliability and performance
+      aiRobotsTxt: true
+      aiRobotsTxtPath: "/app/config/ai-robots.txt" # Deployed with your application
+
+      # Application-specific rules
+      customRules: |
+        # Main application rules
+        User-agent: *
+        Disallow: /admin/
+        Disallow: /api/v1/internal/
+        Disallow: /private/
+        Allow: /api/v1/public/
+        Allow: /docs/
+
+        # SEO optimizations
+        Sitemap: https://example.com/sitemap.xml
+        Sitemap: https://example.com/sitemap-news.xml
+
+        # Specific bot instructions
+        User-agent: Googlebot
+        Allow: /
+        Crawl-delay: 1
+
+        User-agent: Bingbot
+        Allow: /
+        Crawl-delay: 2
+
+      # Performance settings
+      cacheTtl: 3600 # Cache for 1 hour (local file changes rarely)
+      enableMetrics: true # Monitor performance in production
+
+      # Conservative settings for production stability
+      requestTimeout: 30 # Generous timeout for any network operations
+      maxRetries: 2 # Minimal retries since we're using local files
+
+      # Emergency fallback (though unlikely to be used with local files)
+      fallbackContent: |
+        User-agent: *
+        Disallow: /admin/
+        Allow: /
+
+---
+# Example 2: Multi-Source Configuration with External AI Rules
+# Balances external AI rules with custom business requirements
+# Includes robust error handling and fallback mechanisms
+production-multi-source:
+  plugin:
+    pangolin-robots-txt:
+      # Fetch latest AI robots.txt rules from external source
+      aiRobotsTxt: true
+      aiRobotsTxtUrl: "https://raw.githubusercontent.com/ai-robots-txt/ai.robots.txt/refs/heads/main/robots.txt"
+
+      # Don't overwrite backend robots.txt, append to it
+      overwrite: false
+
+      # Business-specific rules that complement AI rules
+      customRules: |
+        # E-commerce specific rules
+        User-agent: *
+        Disallow: /checkout/
+        Disallow: /cart/
+        Disallow: /account/
+        Allow: /products/
+        Allow: /categories/
+
+        # API documentation for developers
+        Allow: /api/docs/
+        Disallow: /api/admin/
+
+        # Marketing and SEO
+        Sitemap: https://shop.example.com/sitemap.xml
+        Sitemap: https://shop.example.com/products-sitemap.xml
+
+        # Specific crawling instructions for major search engines
+        User-agent: Googlebot
+        Crawl-delay: 1
+
+        User-agent: Bingbot  
+        Crawl-delay: 2
+
+        # Block problematic bots while allowing AI research bots
+        User-agent: SemrushBot
+        Disallow: /
+
+        User-agent: AhrefsBot
+        Disallow: /
+
+      # Balanced caching for external content
+      cacheTtl: 1800 # 30 minutes - balance freshness vs performance
+
+      # Robust error handling for external dependencies
+      maxRetries: 5 # More retries for external sources
+      requestTimeout: 20 # Reasonable timeout for GitHub API
+
+      # Comprehensive fallback for when external source fails
+      fallbackContent: |
+        # AI Training Restrictions (fallback rules)
+        User-agent: GPTBot
+        Disallow: /
+
+        User-agent: ChatGPT-User
+        Disallow: /
+
+        User-agent: CCBot
+        Disallow: /
+
+        User-agent: anthropic-ai
+        Disallow: /
+
+        User-agent: Claude-Web
+        Disallow: /
+
+        # Default restriction for unknown AI bots
+        User-agent: *AI*
+        Disallow: /
+
+        User-agent: *bot*
+        Disallow: /private/
+
+      # Enable detailed monitoring for production insights
+      enableMetrics: true
+
+      # Preserve timing information from backend
+      lastModified: true
+
+---
+# Example 3: Development/Staging Configuration
+# Optimized for development environments with faster cache cycles
+# and more verbose logging for debugging
+development-staging:
+  plugin:
+    pangolin-robots-txt:
+      # Block everything in development to prevent accidental indexing
+      overwrite: true # Replace any existing robots.txt completely
+
+      customRules: |
+        # Prevent any indexing in development environments
+        User-agent: *
+        Disallow: /
+
+        # Special allowances for development tools
+        Allow: /health
+        Allow: /metrics
+        Allow: /debug
+
+        # Clear message about environment
+        # This is a development/staging environment
+        # Production site: https://example.com
+
+      # Quick cache expiration for development iteration
+      cacheTtl: 60 # 1 minute cache for rapid development
+
+      # Aggressive monitoring and logging for debugging
+      enableMetrics: true
+
+      # Quick timeouts for development responsiveness
+      requestTimeout: 5
+      maxRetries: 1
+
+      # Simple fallback
+      fallbackContent: |
+        User-agent: *
+        Disallow: /
+
+---
+# Example 4: Corporate/Enterprise Configuration
+# Demonstrates advanced corporate policies with detailed bot management
+# and comprehensive content management strategies
+enterprise-corporate:
+  plugin:
+    pangolin-robots-txt:
+      # Corporate AI policy enforcement
+      aiRobotsTxt: true
+      aiRobotsTxtPath: "/etc/traefik/corporate-ai-robots.txt" # Corporate-approved AI rules
+
+      # Extensive corporate rules for complex web application
+      customRules: |
+        # Corporate Web Application - Robots.txt Policy
+        # Generated by Traefik Pangolin Robots.txt Plugin v1.0.0
+        # Last Updated: 2025-05-22
+
+        # === GENERAL ACCESS RULES ===
+        User-agent: *
+        Disallow: /admin/
+        Disallow: /internal/
+        Disallow: /employee/
+        Disallow: /api/private/
+        Disallow: /temp/
+        Disallow: /staging/
+        Allow: /public/
+        Allow: /docs/
+        Allow: /api/public/
+        Allow: /blog/
+        Allow: /news/
+
+        # === SEARCH ENGINE OPTIMIZATION ===
+        Sitemap: https://corporate.example.com/sitemap.xml
+        Sitemap: https://corporate.example.com/news-sitemap.xml
+        Sitemap: https://corporate.example.com/products-sitemap.xml
+
+        # === MAJOR SEARCH ENGINES ===
+        User-agent: Googlebot
+        Allow: /
+        Crawl-delay: 1
+
+        User-agent: Bingbot
+        Allow: /
+        Crawl-delay: 1
+
+        User-agent: Slurp
+        Allow: /
+        Crawl-delay: 2
+
+        # === SOCIAL MEDIA CRAWLERS ===
+        User-agent: facebookexternalhit
+        Allow: /public/
+        Allow: /news/
+        Allow: /blog/
+
+        User-agent: Twitterbot
+        Allow: /public/
+        Allow: /news/
+        Allow: /blog/
+
+        User-agent: LinkedInBot
+        Allow: /public/
+        Allow: /news/
+        Allow: /careers/
+
+        # === SEO TOOLS (RESTRICTED ACCESS) ===
+        User-agent: SemrushBot
+        Disallow: /
+
+        User-agent: AhrefsBot
+        Disallow: /
+
+        User-agent: MJ12bot
+        Disallow: /
+
+        # === ARCHIVE SERVICES ===
+        User-agent: ia_archiver
+        Allow: /public/
+        Allow: /news/
+        Disallow: /internal/
+
+        User-agent: archive.org_bot
+        Allow: /public/
+        Allow: /news/
+        Disallow: /internal/
+
+        # === COMPLIANCE AND LEGAL ===
+        # This robots.txt file complies with:
+        # - Corporate IT Security Policy v2.1
+        # - Data Privacy Regulations (GDPR, CCPA)
+        # - Industry Best Practices for Web Crawling
+
+      # Enterprise-grade caching strategy
+      cacheTtl: 7200 # 2 hour cache for stable corporate environment
+
+      # Conservative settings for enterprise reliability
+      requestTimeout: 45 # Extended timeout for corporate networks
+      maxRetries: 3 # Standard enterprise retry policy
+
+      # Comprehensive fallback aligning with corporate security policy
+      fallbackContent: |
+        # Corporate Fallback Policy - Secure by Default
+        User-agent: *
+        Disallow: /admin/
+        Disallow: /internal/
+        Disallow: /employee/
+        Disallow: /api/private/
+        Allow: /public/
+
+        # Corporate Contact Information
+        # For crawling questions: webmaster@corporate.example.com
+        # Security concerns: security@corporate.example.com
+
+      # Enterprise monitoring and compliance
+      enableMetrics: true
+      lastModified: true
+
+---
+# Example 5: Microservices Configuration
+# Optimized for microservice architectures where each service
+# might have different robots.txt requirements
+microservice-api:
+  plugin:
+    pangolin-robots-txt:
+      # API-focused robots.txt for microservice
+      overwrite: true # This service provides complete robots.txt
+
+      customRules: |
+        # Microservice API - User Management Service
+        # Service: user-api.internal.example.com
+        # Version: v2.1.0
+
+        # === API DOCUMENTATION ACCESS ===
+        User-agent: *
+        Allow: /docs/
+        Allow: /openapi.json
+        Allow: /health
+        Allow: /metrics
+
+        # === RESTRICTED API ENDPOINTS ===
+        Disallow: /api/v1/admin/
+        Disallow: /api/v1/internal/
+        Disallow: /api/v1/users/private/
+        Disallow: /debug/
+
+        # === PUBLIC API ENDPOINTS ===
+        Allow: /api/v1/users/public/
+        Allow: /api/v1/status/
+        Allow: /api/v1/version/
+
+        # === SEARCH ENGINE GUIDELINES ===
+        # This is a microservice API - no content for indexing
+        User-agent: Googlebot
+        Disallow: /
+
+        User-agent: Bingbot
+        Disallow: /
+
+        # === API-SPECIFIC DOCUMENTATION ===
+        # API Documentation: https://user-api.internal.example.com/docs/
+        # Health Check: https://user-api.internal.example.com/health
+        # OpenAPI Spec: https://user-api.internal.example.com/openapi.json
+
+      # Fast caching for microservice environments
+      cacheTtl: 600 # 10 minutes - frequent deployments
+
+      # Quick response settings for microservices
+      requestTimeout: 10
+      maxRetries: 2
+
+      # Minimal fallback for API services
+      fallbackContent: |
+        User-agent: *
+        Disallow: /
+        Allow: /health
+        Allow: /docs/
+
+      # Enable metrics for microservice monitoring
+      enableMetrics: true

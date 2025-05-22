@@ -1,12 +1,11 @@
-displayName: Demo Plugin
+displayName: Pangolin Robots.txt Plugin
 type: middleware
 iconPath: .assets/icon.png
 
-import: github.com/traefik/plugindemo
+import: github.com/hhftechnology/traefik-pangolin-robots-txt
 
-summary: '[Demo] Add Request Header'
+summary: 'Traefik plugin to create, overwrite or complete the robots.txt file with enhanced caching and configuration options'
 
 testData:
-  Headers:
-    X-Demo: test
-    X-URL: '{{URL}}'
+  aiRobotsTxt: true
+  customRules: "\nUser-agent: *\nDisallow: /private/\n"

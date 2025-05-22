@@ -1,49 +1,41 @@
-This repository includes an example plugin, `demo`, for you to use as a reference for developing your own plugins.
+# Pangolin Robots.txt Traefik plugin
 
-[![Build Status](https://github.com/traefik/plugindemo/workflows/Main/badge.svg?branch=master)](https://github.com/traefik/plugindemo/actions)
+#### Table of Contents
 
-The existing plugins can be browsed into the [Plugin Catalog](https://plugins.traefik.io).
+1. [Description](#description)
+2. [Setup](#setup)
+3. [Usage](#usage)
+4. [Reference](#reference)
+5. [Advanced Features](#advanced-features)
+6. [Performance and Caching](#performance-and-caching)
 
-# Developing a Traefik plugin
+## Description
 
-[Traefik](https://traefik.io) plugins are developed using the [Go language](https://golang.org).
+Robots.txt is a middleware plugin for [Traefik](https://traefik.io/) which dynamically creates or enhances the `/robots.txt` file of your website. The plugin supports multiple content sources including [ai.robots.txt](https://github.com/ai-robots-txt/ai.robots.txt/) rules, local files, custom URLs, and user-defined rules.
 
-A [Traefik](https://traefik.io) middleware plugin is just a [Go package](https://golang.org/ref/spec#Packages) that provides an `http.Handler` to perform specific processing of requests and responses.
+**Key Features:**
+- **Intelligent Caching**: Reduces external API calls with configurable TTL
+- **Multiple Content Sources**: Support for URLs, local files, and custom rules
+- **Robust Error Handling**: Fallback mechanisms and retry logic
+- **Performance Monitoring**: Optional metrics and detailed logging
+- **Content Validation**: Ensures fetched robots.txt content meets basic standards
+- **Flexible Configuration**: Extensive customization options for various use cases
 
-Rather than being pre-compiled and linked, however, plugins are executed on the fly by [Yaegi](https://github.com/traefik/yaegi), an embedded Go interpreter.
-
-## Usage
-
-For a plugin to be active for a given Traefik instance, it must be declared in the static configuration.
-
-Plugins are parsed and loaded exclusively during startup, which allows Traefik to check the integrity of the code and catch errors early on.
-If an error occurs during loading, the plugin is disabled.
-
-For security reasons, it is not possible to start a new plugin or modify an existing one while Traefik is running.
-
-Once loaded, middleware plugins behave exactly like statically compiled middlewares.
-Their instantiation and behavior are driven by the dynamic configuration.
-
-Plugin dependencies must be [vendored](https://golang.org/ref/mod#vendoring) for each plugin.
-Vendored packages should be included in the plugin's GitHub repository. ([Go modules](https://blog.golang.org/using-go-modules) are not supported.)
-
-### Configuration
-
-For each plugin, the Traefik static configuration must define the module name (as is usual for Go packages).
-
-The following declaration (given here in YAML) defines a plugin:
+## Setup
 
 ```yaml
 # Static configuration
 
 experimental:
   plugins:
-    example:
-      moduleName: github.com/traefik/plugindemo
-      version: v0.2.1
+    pangolin-robots-txt:
+      moduleName: github.com/hhftechnology/traefik-pangolin-robots-txt
+      version: v1.0.0
 ```
 
-Here is an example of a file provider dynamic configuration (given here in YAML), where the interesting part is the `http.middlewares` section:
+## Usage
+
+### Basic Usage with Custom Rules
 
 ```yaml
 # Dynamic configuration
@@ -51,220 +43,205 @@ Here is an example of a file provider dynamic configuration (given here in YAML)
 http:
   routers:
     my-router:
-      rule: host(`demo.localhost`)
+      rule: host(`localhost`)
       service: service-foo
       entryPoints:
         - web
       middlewares:
-        - my-plugin
+        - my-pangolin-robots-txt
 
   services:
    service-foo:
       loadBalancer:
         servers:
-          - url: http://127.0.0.1:5000
+          - url: http://127.0.0.1
   
   middlewares:
-    my-plugin:
+    my-pangolin-robots-txt:
       plugin:
-        example:
-          headers:
-            Foo: Bar
+        pangolin-robots-txt:
+          customRules: |
+            User-agent: *
+            Disallow: /private/
+            Disallow: /admin/
+            Allow: /public/
 ```
 
-### Local Mode
-
-Traefik also offers a developer mode that can be used for temporary testing of plugins not hosted on GitHub.
-To use a plugin in local mode, the Traefik static configuration must define the module name (as is usual for Go packages) and a path to a [Go workspace](https://golang.org/doc/gopath_code.html#Workspaces), which can be the local GOPATH or any directory.
-
-The plugins must be placed in `./plugins-local` directory,
-which should be in the working directory of the process running the Traefik binary.
-The source code of the plugin should be organized as follows:
-
-```
-./plugins-local/
-    └── src
-        └── github.com
-            └── traefik
-                └── plugindemo
-                    ├── demo.go
-                    ├── demo_test.go
-                    ├── go.mod
-                    ├── LICENSE
-                    ├── Makefile
-                    └── readme.md
-```
+### Advanced Usage with AI Robots.txt and Caching
 
 ```yaml
-# Static configuration
-
-experimental:
-  localPlugins:
-    example:
-      moduleName: github.com/traefik/plugindemo
+middlewares:
+  enhanced-robots-txt:
+    plugin:
+      robots-txt:
+        aiRobotsTxt: true
+        customRules: |
+          User-agent: *
+          Disallow: /api/
+          Sitemap: https://example.com/sitemap.xml
+        cacheTtl: 1800  # Cache for 30 minutes
+        enableMetrics: true
+        fallbackContent: |
+          User-agent: *
+          Disallow: /
 ```
 
-(In the above example, the `plugindemo` plugin will be loaded from the path `./plugins-local/src/github.com/traefik/plugindemo`.)
+### Using Local File Source
 
 ```yaml
-# Dynamic configuration
-
-http:
-  routers:
-    my-router:
-      rule: host(`demo.localhost`)
-      service: service-foo
-      entryPoints:
-        - web
-      middlewares:
-        - my-plugin
-
-  services:
-   service-foo:
-      loadBalancer:
-        servers:
-          - url: http://127.0.0.1:5000
-  
-  middlewares:
-    my-plugin:
-      plugin:
-        example:
-          headers:
-            Foo: Bar
+middlewares:
+  file-based-pangolin-robots-txt:
+    plugin:
+      pangolin-robots-txt:
+        aiRobotsTxt: true
+        aiRobotsTxtPath: "/app/config/ai-robots.txt"  # Local file takes precedence over URL
+        customRules: |
+          User-agent: *
+          Allow: /
+        overwrite: false
+        cacheTtl: 3600  # Cache for 1 hour
 ```
 
-## Defining a Plugin
-
-A plugin package must define the following exported Go objects:
-
-- A type `type Config struct { ... }`. The struct fields are arbitrary.
-- A function `func CreateConfig() *Config`.
-- A function `func New(ctx context.Context, next http.Handler, config *Config, name string) (http.Handler, error)`.
-
-```go
-// Package example a example plugin.
-package example
-
-import (
-	"context"
-	"net/http"
-)
-
-// Config the plugin configuration.
-type Config struct {
-	// ...
-}
-
-// CreateConfig creates the default plugin configuration.
-func CreateConfig() *Config {
-	return &Config{
-		// ...
-	}
-}
-
-// Example a plugin.
-type Example struct {
-	next     http.Handler
-	name     string
-	// ...
-}
-
-// New created a new plugin.
-func New(ctx context.Context, next http.Handler, config *Config, name string) (http.Handler, error) {
-	// ...
-	return &Example{
-		// ...
-	}, nil
-}
-
-func (e *Example) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	// ...
-	e.next.ServeHTTP(rw, req)
-}
-```
-
-## Logs
-
-Currently, the only way to send logs to Traefik is to use `os.Stdout.WriteString("...")` or `os.Stderr.WriteString("...")`.
-
-In the future, we will try to provide something better and based on levels.
-
-## Plugins Catalog
-
-Traefik plugins are stored and hosted as public GitHub repositories.
-
-Every 30 minutes, the Plugins Catalog online service polls Github to find plugins and add them to its catalog.
-
-### Prerequisites
-
-To be recognized by Plugins Catalog, your repository must meet the following criteria:
-
-- The `traefik-plugin` topic must be set.
-- The `.traefik.yml` manifest must exist, and be filled with valid contents.
-
-If your repository fails to meet either of these prerequisites, Plugins Catalog will not see it.
-
-### Manifest
-
-A manifest is also mandatory, and it should be named `.traefik.yml` and stored at the root of your project.
-
-This YAML file provides Plugins Catalog with information about your plugin, such as a description, a full name, and so on.
-
-Here is an example of a typical `.traefik.yml`file:
+### Custom AI Robots.txt Source
 
 ```yaml
-# The name of your plugin as displayed in the Plugins Catalog web UI.
-displayName: Name of your plugin
-
-# For now, `middleware` is the only type available.
-type: middleware
-
-# The import path of your plugin.
-import: github.com/username/my-plugin
-
-# A brief description of what your plugin is doing.
-summary: Description of what my plugin is doing
-
-# Medias associated to the plugin (optional)
-iconPath: foo/icon.png
-bannerPath: foo/banner.png
-
-# Configuration data for your plugin.
-# This is mandatory,
-# and Plugins Catalog will try to execute the plugin with the data you provide as part of its startup validity tests.
-testData:
-  Headers:
-    Foo: Bar
+middlewares:
+  custom-source-pangolin-robots-txt:
+    plugin:
+      pangolin-robots-txt:
+        aiRobotsTxt: true
+        aiRobotsTxtUrl: "https://my-company.com/internal/ai-robots.txt"
+        customRules: |
+          User-agent: CompanyBot
+          Allow: /
+        requestTimeout: 15
+        maxRetries: 5
 ```
 
-Properties include:
+## Reference
 
-- `displayName` (required): The name of your plugin as displayed in the Plugins Catalog web UI.
-- `type` (required): For now, `middleware` is the only type available.
-- `import` (required): The import path of your plugin.
-- `summary` (required): A brief description of what your plugin is doing.
-- `testData` (required): Configuration data for your plugin. This is mandatory, and Plugins Catalog will try to execute the plugin with the data you provide as part of its startup validity tests.
-- `iconPath` (optional): A local path in the repository to the icon of the project.
-- `bannerPath` (optional): A local path in the repository to the image that will be used when you will share your plugin page in social medias.
+### Configuration Options
 
-There should also be a `go.mod` file at the root of your project. Plugins Catalog will use this file to validate the name of the project.
+| Name              | Type    | Description                                           | Default Value | Example                              |
+|-------------------|---------|-------------------------------------------------------|---------------|--------------------------------------|
+| `customRules`     | string  | Custom robots.txt rules to append or use exclusively | `""`          | `"\nUser-agent: *\nDisallow: /private/\n"` |
+| `overwrite`       | boolean | Replace original robots.txt content completely       | `false`       | `true`                               |
+| `aiRobotsTxt`     | boolean | Enable fetching AI robots.txt rules                  | `false`       | `true`                               |
+| `lastModified`    | boolean | Preserve Last-Modified headers from backend          | `false`       | `true`                               |
 
-### Tags and Dependencies
+### Advanced Configuration Options
 
-Plugins Catalog gets your sources from a Go module proxy, so your plugins need to be versioned with a git tag.
+| Name                | Type    | Description                                           | Default Value | Example                              |
+|---------------------|---------|-------------------------------------------------------|---------------|--------------------------------------|
+| `aiRobotsTxtUrl`    | string  | Custom URL for AI robots.txt source                  | GitHub URL    | `"https://internal.com/robots.txt"`  |
+| `aiRobotsTxtPath`   | string  | Local file path for AI robots.txt (overrides URL)   | `""`          | `"/app/config/ai-robots.txt"`        |
+| `cacheTtl`          | integer | Cache duration in seconds for external content       | `300`         | `1800` (30 minutes)                  |
+| `maxRetries`        | integer | Maximum retry attempts for failed external requests  | `3`           | `5`                                  |
+| `requestTimeout`    | integer | HTTP request timeout in seconds                      | `10`          | `30`                                 |
+| `fallbackContent`   | string  | Content to use when external sources fail            | `""`          | `"User-agent: *\nDisallow: /"`       |
+| `enableMetrics`     | boolean | Enable detailed logging and metrics collection       | `false`       | `true`                               |
 
-Last but not least, if your plugin middleware has Go package dependencies, you need to vendor them and add them to your GitHub repository.
+## Advanced Features
 
-If something goes wrong with the integration of your plugin, Plugins Catalog will create an issue inside your Github repository and will stop trying to add your repo until you close the issue.
+### Intelligent Caching System
 
-## Troubleshooting
+The plugin includes a sophisticated caching mechanism that significantly reduces external API calls and improves performance:
 
-If Plugins Catalog fails to recognize your plugin, you will need to make one or more changes to your GitHub repository.
+- **Configurable TTL**: Set cache duration based on your needs (from minutes to hours)
+- **Source-Aware Caching**: Different cache entries for different sources (URLs vs files)
+- **Thread-Safe Operations**: Safe for high-concurrency environments
+- **Cache Miss Handling**: Graceful degradation when cache expires or fails
 
-In order for your plugin to be successfully imported by Plugins Catalog, consult this checklist:
+### Multiple Content Sources
 
-- The `traefik-plugin` topic must be set on your repository.
-- There must be a `.traefik.yml` file at the root of your project describing your plugin, and it must have a valid `testData` property for testing purposes.
-- There must be a valid `go.mod` file at the root of your project.
-- Your plugin must be versioned with a git tag.
-- If you have package dependencies, they must be vendored and added to your GitHub repository.
+The plugin supports various content sources with a clear priority order:
+
+1. **Local Files** (`aiRobotsTxtPath`): Highest priority, ideal for containerized deployments
+2. **Custom URLs** (`aiRobotsTxtUrl`): Alternative external sources beyond the default GitHub repository
+3. **Default AI Repository**: The standard ai.robots.txt GitHub repository
+4. **Custom Rules**: Always included, either appended or as exclusive content
+
+### Error Handling and Resilience
+
+The plugin implements several layers of error handling to ensure reliability:
+
+- **Retry Logic**: Configurable retry attempts with exponential backoff
+- **Fallback Content**: Predefined content when all external sources fail
+- **Content Validation**: Basic validation to ensure fetched content is well-formed
+- **Graceful Degradation**: Service continues even when external dependencies fail
+
+### Performance Monitoring
+
+When `enableMetrics` is enabled, the plugin provides detailed insights:
+
+- **Cache Performance**: Hit/miss ratios and cache effectiveness
+- **External Calls**: Number and success rate of external requests
+- **Error Tracking**: Detailed error counts and types
+- **Response Times**: Performance metrics for optimization
+
+## Performance and Caching
+
+### Cache Strategy
+
+The caching system is designed to balance freshness with performance:
+
+```yaml
+# Aggressive caching for stable content
+cacheTtl: 3600  # 1 hour
+
+# Moderate caching for dynamic content  
+cacheTtl: 900   # 15 minutes
+
+# Minimal caching for frequently updated content
+cacheTtl: 300   # 5 minutes
+```
+
+### File vs URL Performance
+
+Local files offer significant performance advantages:
+
+- **Instant Access**: No network latency or external dependencies
+- **Reliability**: Immune to external service outages
+- **Security**: No external network calls required
+- **Consistency**: Content remains stable across deployments
+
+### Optimization Tips
+
+For optimal performance in production environments:
+
+1. **Use Local Files**: Deploy AI robots.txt content with your application
+2. **Set Appropriate Cache TTL**: Balance freshness needs with performance requirements
+3. **Enable Metrics**: Monitor cache effectiveness and adjust configuration accordingly
+4. **Configure Fallback Content**: Provide meaningful defaults for error scenarios
+5. **Adjust Timeouts**: Set realistic timeout values based on your network conditions
+
+### Example Production Configuration
+
+```yaml
+middlewares:
+  production-pangolin-robots-txt:
+    plugin:
+      pangolin-robots-txt:
+        # Use local file for reliability
+        aiRobotsTxt: true
+        aiRobotsTxtPath: "/app/robots/ai-robots.txt"
+        
+        # Custom rules for your application
+        customRules: |
+          User-agent: *
+          Disallow: /admin/
+          Disallow: /api/v1/internal/
+          Allow: /api/v1/public/
+          Sitemap: https://example.com/sitemap.xml
+          
+        # Production settings
+        cacheTtl: 1800        # 30-minute cache
+        requestTimeout: 20    # Generous timeout
+        maxRetries: 3         # Reasonable retry attempts
+        enableMetrics: true   # Monitor performance
+        
+        # Fallback for emergencies
+        fallbackContent: |
+          User-agent: *
+          Disallow: /
+```
