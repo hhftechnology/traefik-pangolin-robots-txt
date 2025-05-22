@@ -1,17 +1,24 @@
-# Pangolin Robots.txt Traefik plugin
+<div align="center" width="100%">
+    <h1>Pangolin Robots.txt Traefik plugin for Traefik v3</h1>
+    <img width="auto" src=".assets/banner.png">
+    <a target="_blank" href="https://GitHub.com/hhftechnology/traefik-pangolin-robots-txt/graphs/contributors/"><img src="https://img.shields.io/github/contributors/hhftechnology/traefik-pangolin-robots-txt.svg" /></a><br>
+    <a target="_blank" href="https://GitHub.com/hhftechnology/traefik-pangolin-robots-txt/commits/"><img src="https://img.shields.io/github/last-commit/hhftechnology/traefik-pangolin-robots-txt.svg" /></a>
+    <a target="_blank" href="https://GitHub.com/hhftechnology/traefik-pangolin-robots-txt/issues/"><img src="https://img.shields.io/github/issues/hhftechnology/traefik-pangolin-robots-txt.svg" /></a>
+    <a target="_blank" href="https://github.com/hhftechnology/traefik-pangolin-robots-txt/issues?q=is%3Aissue+is%3Aclosed"><img src="https://img.shields.io/github/issues-closed/hhftechnology/traefik-pangolin-robots-txt.svg" /></a><br>
+        <a target="_blank" href="https://github.com/hhftechnology/traefik-pangolin-robots-txt/stargazers"><img src="https://img.shields.io/github/stars/hhftechnology/traefik-pangolin-robots-txt.svg?style=social&label=Star" /></a>
+    <a target="_blank" href="https://github.com/hhftechnology/traefik-pangolin-robots-txt/network/members"><img src="https://img.shields.io/github/forks/hhftechnology/traefik-pangolin-robots-txt.svg?style=social&label=Fork" /></a>
+    <a target="_blank" href="https://github.com/hhftechnology/traefik-pangolin-robots-txt/watchers"><img src="https://img.shields.io/github/watchers/hhftechnology/traefik-pangolin-robots-txt.svg?style=social&label=Watch" /></a><br>
+</div>
 
-#### Table of Contents
+<div align="center" width="100%">
+    <p>Robots.txt is a middleware plugin for [Traefik](https://traefik.io/) which dynamically creates or enhances the `/robots.txt` file of your website. The plugin supports multiple content sources including [ai.robots.txt](https://github.com/ai-robots-txt/ai.robots.txt/) rules, local files, custom URLs, and user-defined rules.</p>
+    <a target="_blank" href="https://github.com/hhftechnology/traefik-pangolin-robots-txt"><img src="https://img.shields.io/badge/maintainer-hhftechnology-orange" /></a>
+</div>
 
-1. [Description](#description)
-2. [Setup](#setup)
-3. [Usage](#usage)
-4. [Reference](#reference)
-5. [Advanced Features](#advanced-features)
-6. [Performance and Caching](#performance-and-caching)
+## 📝 Forums
 
-## Description
-
-Robots.txt is a middleware plugin for [Traefik](https://traefik.io/) which dynamically creates or enhances the `/robots.txt` file of your website. The plugin supports multiple content sources including [ai.robots.txt](https://github.com/ai-robots-txt/ai.robots.txt/) rules, local files, custom URLs, and user-defined rules.
+[See the forums for further discussion here](https://forum.hhf.technology/)
+Make Traefik a powerful static file server!
 
 **Key Features:**
 - **Intelligent Caching**: Reduces external API calls with configurable TTL
